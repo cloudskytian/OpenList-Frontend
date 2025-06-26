@@ -2,9 +2,6 @@ import SubtitlesOctopus from "libass-wasm"
 import workerUrl from "libass-wasm/dist/js/subtitles-octopus-worker.js?url"
 import wasmUrl from "libass-wasm/dist/js/subtitles-octopus-worker.wasm?url"
 
-import TimesNewRomanFont from "./fonts/TimesNewRoman.ttf?url"
-import fallbackFont from "./fonts/SourceHanSansCN-Bold.woff2?url"
-
 let instance = null
 
 function isAbsoluteUrl(url) {
