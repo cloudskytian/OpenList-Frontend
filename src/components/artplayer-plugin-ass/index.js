@@ -56,10 +56,14 @@ function artplayerPluginAss(options) {
     instance = new SubtitlesOctopus({
       // TODO: load available fonts from manage panel
       availableFonts: {
-        "times new roman": toAbsoluteUrl(TimesNewRomanFont),
+        "times new roman": toAbsoluteUrl(
+          "https://res.oplist.org/fonts/TimesNewRoman.ttf",
+        ),
       },
       workerUrl: await loadWorker({ workerUrl, wasmUrl }),
-      fallbackFont: toAbsoluteUrl(fallbackFont),
+      fallbackFont: toAbsoluteUrl(
+        "https://res.oplist.org/fonts/SourceHanSansCN-Bold.woff2",
+      ),
       video: art.template.$video,
       ...options,
     })
