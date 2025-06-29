@@ -54,11 +54,13 @@ const Preview = () => {
     try {
       // 动态加载libheif脚本
       if (!window.libheif) {
-        await loadScript("/static/libheif/libheif.js", "libheif-script")
+//        await loadScript("/static/libheif/libheif.js", "libheif-script")
+        await loadScript("https://testingcf.jsdelivr.net/npm/libheif-js/libheif-wasm/libheif.js", "libheif-script")
       }
 
       // 加载WASM文件
-      const wasmBinary = await fetchWasm("/static/libheif/libheif.wasm")
+//      const wasmBinary = await fetchWasm("/static/libheif/libheif.wasm")
+      const wasmBinary = await fetchWasm("https://testingcf.jsdelivr.net/npm/libheif-js/libheif-wasm/libheif.wasm")
 
       // 初始化libheif
       libheif = window.libheif({ wasmBinary })
