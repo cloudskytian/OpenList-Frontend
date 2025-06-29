@@ -170,7 +170,7 @@ jobs:
           rm -f lite/dist/openlist-frontend-dist-lite-v*.tar.gz
           # Copy the lite version
           mkdir dist/lite
-          cp lite/dist/* dist/lite/
+          cp -r lite/dist/. dist/lite/
 
           if ! jq -e '.name and .version' package.json > /dev/null; then
             echo "Error: Invalid package.json"
