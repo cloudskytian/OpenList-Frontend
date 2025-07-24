@@ -60,6 +60,12 @@ const previews: Preview[] = [
     prior: true,
   },
   {
+    name: "PowerPoint (Closed Resource)",
+    exts: ["pptx"],
+    component: lazy(() => import("./pptx")),
+    prior: true,
+  },
+  {
     name: "Flash",
     exts: ["swf"],
     component: lazy(() => import("./flash")),
