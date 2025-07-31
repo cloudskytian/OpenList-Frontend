@@ -12,10 +12,13 @@
   "set_transmission": "Set Transmission",
   "115": "115",
   "set_115": "Set 115",
+  "115_open": "115 Open",
+  "set_115_open": "Set 115 Open",
   "pikpak": "PikPak",
   "set_pikpak": "Set PikPak",
   "thunder": "Thunder",
   "set_thunder": "Set Thunder",
   "thunder_browser": "ThunderBrowser",
-  "set_thunder_browser": "Set ThunderBrowser"
+  "set_thunder_browser": "Set ThunderBrowser",
+  "set_thunderX": "Set ThunderX"
 }

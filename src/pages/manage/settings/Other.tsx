@@ -24,9 +24,11 @@ const OtherSettings = () => {
   const [transmissionUrl, setTransmissionUrl] = createSignal("")
   const [transmissionSeedTime, setTransmissionSeedTime] = createSignal("")
   const [pan115TempDir, set115TempDir] = createSignal("")
+  const [pan115OpenTempDir, set115OpenTempDir] = createSignal("")
   const [pikpakTempDir, setPikPakTempDir] = createSignal("")
   const [thunderTempDir, setThunderTempDir] = createSignal("")
   const [thunderBrowserTempDir, setThunderBrowserTempDir] = createSignal("")
+  const [thunderXTempDir, setThunderXTempDir] = createSignal("")
   const [token, setToken] = createSignal("")
   const [settings, setSettings] = createSignal<SettingItem[]>([])
   const [settingsLoading, settingsData] = useFetch(
@@ -57,6 +59,12 @@ const OtherSettings = () => {
         temp_dir: pan115TempDir(),
       }),
   )
+  const [set115OpenLoading, set115Open] = useFetch(
+    (): PResp<string> =>
+      r.post("/admin/setting/set_115_open", {
+        temp_dir: pan115OpenTempDir(),
+      }),
+  )
   const [setPikPakLoading, setPikPak] = useFetch(
     (): PResp<string> =>
       r.post("/admin/setting/set_pikpak", {
@@ -67,6 +75,12 @@ const OtherSettings = () => {
     (): PResp<string> =>
       r.post("/admin/setting/set_thunder", {
         temp_dir: thunderTempDir(),
+      }),
+  )
+  const [setThunderXLoading, setThunderX] = useFetch(
+    (): PResp<string> =>
+      r.post("/admin/setting/set_thunderx", {
+        temp_dir: thunderXTempDir(),
       }),
   )
   const [setThunderBrowserLoading, setThunderBrowser] = useFetch(
@@ -92,11 +106,17 @@ const OtherSettings = () => {
         data.find((i) => i.key === "transmission_seedtime")?.value || "",
       )
       set115TempDir(data.find((i) => i.key === "115_temp_dir")?.value || "")
+      set115OpenTempDir(
+        data.find((i) => i.key === "115_open_temp_dir")?.value || "",
+      )
       setPikPakTempDir(
         data.find((i) => i.key === "pikpak_temp_dir")?.value || "",
       )
       setThunderTempDir(
         data.find((i) => i.key === "thunder_temp_dir")?.value || "",
+      )
+      setThunderXTempDir(
+        data.find((i) => i.key === "thunderx_temp_dir")?.value || "",
       )
       setThunderBrowserTempDir(
         data.find((i) => i.key === "thunder_browser_temp_dir")?.value || "",
@@ -210,6 +230,29 @@ const OtherSettings = () => {
       >
         {t("settings_other.set_115")}
       </Button>
+      <Heading my="$2">{t("settings_other.115_open")}</Heading>
+      <FormControl w="$full" display="flex" flexDirection="column">
+        <FormLabel for="115_open_temp_dir" display="flex" alignItems="center">
+          {t(`settings.115_open_temp_dir`)}
+        </FormLabel>
+        <FolderChooseInput
+          id="115_open_temp_dir"
+          value={pan115OpenTempDir()}
+          onChange={(path) => set115OpenTempDir(path)}
+        />
+      </FormControl>
+      <Button
+        my="$2"
+        loading={set115OpenLoading()}
+        onClick={async () => {
+          const resp = await set115Open()
+          handleResp(resp, (data) => {
+            notify.success(data)
+          })
+        }}
+      >
+        {t("settings_other.set_115_open")}
+      </Button>
       <Heading my="$2">{t("settings_other.pikpak")}</Heading>
       <FormControl w="$full" display="flex" flexDirection="column">
         <FormLabel for="pikpak_temp_dir" display="flex" alignItems="center">
@@ -282,6 +325,29 @@ const OtherSettings = () => {
         }}
       >
         {t("settings_other.set_thunder_browser")}
+      </Button>
+      <Heading my="$2">{t("settings_other.thunderx")}</Heading>
+      <FormControl w="$full" display="flex" flexDirection="column">
+        <FormLabel for="thunderX_temp_dir" display="flex" alignItems="center">
+          {t(`settings.thunderX_temp_dir`)}
+        </FormLabel>
+        <FolderChooseInput
+          id="thunderX_temp_dir"
+          value={thunderXTempDir()}
+          onChange={(path) => setThunderXTempDir(path)}
+        />
+      </FormControl>
+      <Button
+        my="$2"
+        loading={setThunderXLoading()}
+        onClick={async () => {
+          const resp = await setThunderX()
+          handleResp(resp, (data) => {
+            notify.success(data)
+          })
+        }}
+      >
+        {t("settings_other.set_thunderX")}
       </Button>
       <Heading my="$2">{t("settings.token")}</Heading>
       <Input value={token()} readOnly />
