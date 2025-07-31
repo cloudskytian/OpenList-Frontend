@@ -127,12 +127,12 @@ const previews: Preview[] = [
     component: lazy(() => import("./aliyun_office")),
     prior: true,
   },
-  {
-    name: "PDF Preview",
-    exts: ["pdf"],
-    component: lazy(() => import("./pdf")),
-    prior: true,
-  },
+  // {
+  //   name: "PDF Preview",
+  //   exts: ["pdf"],
+  //   component: lazy(() => import("./pdf")),
+  //   prior: true,
+  // },
   {
     name: "Asciinema",
     exts: ["cast"],
