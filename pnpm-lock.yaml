@@ -198,8 +198,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5
       '@vitejs/plugin-legacy':
-        specifier: ^6.1.1
-        version: 6.1.1(terser@5.43.1)(vite@6.3.6(@types/node@22.18.1)(terser@5.43.1)(yaml@2.8.1))
+        specifier: ^7.0.0
+        version: 7.2.1(terser@5.43.1)(vite@6.3.6(@types/node@22.18.1)(terser@5.43.1)(yaml@2.8.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1531,12 +1531,12 @@ packages:
   '@viselect/vanilla@3.9.0':
     resolution: {integrity: sha512-E9eBgoi/crJ0SlZMAc+Yst7nU324LZ5LLvcXjzWEcrfllscdpTml2OLOKHC7O8Bbz19OybSLv6VexxnjlJrLxQ==}
 
-  '@vitejs/plugin-legacy@6.1.1':
-    resolution: {integrity: sha512-BvusL+mYZ0q5qS5Rq3D70QxZBmhyiHRaXLtYJHH5AEsAmdSqJR4xe5KwMi1H3w8/9lVJwhkLYqFQ9vmWYWy6kA==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+  '@vitejs/plugin-legacy@7.2.1':
+    resolution: {integrity: sha512-CaXb/y0mlfu7jQRELEJJc2/5w2bX2m1JraARgFnvSB2yfvnCNJVWWlqAo6WjnKoepOwKx8gs0ugJThPLKCOXIg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       terser: ^5.16.0
-      vite: ^6.0.0
+      vite: ^7.0.0
 
   acorn@8.15.0:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
@@ -1778,8 +1778,8 @@ packages:
   core-js-compat@3.44.0:
     resolution: {integrity: sha512-JepmAj2zfl6ogy34qfWtcE7nHKAJnKsQFRn++scjVS2bZFllwptzw61BZcZFYBPpUznLfAvh0LGhxKppk04ClA==}
 
-  core-js@3.44.0:
-    resolution: {integrity: sha512-aFCtd4l6GvAXwVEh3XbbVqJGHDJt0OZRa+5ePGx3LLwi12WfexqQxcsohb2wgsa/92xtl19Hd66G/L+TaAxDMw==}
+  core-js@3.45.1:
+    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
 
   cose-base@1.0.3:
     resolution: {integrity: sha512-s9whTXInMSgAp/NVXVNuVxVKzGH2qck3aQlVHxDCdAEPgtMKwc4Wq6/QKhgdEdgbLSi9rBTAcPoRa6JpiG4ksg==}
@@ -4780,13 +4780,17 @@ snapshots:
 
   '@viselect/vanilla@3.9.0': {}
 
-  '@vitejs/plugin-legacy@6.1.1(terser@5.43.1)(vite@6.3.6(@types/node@22.18.1)(terser@5.43.1)(yaml@2.8.1))':
+  '@vitejs/plugin-legacy@7.2.1(terser@5.43.1)(vite@6.3.6(@types/node@22.18.1)(terser@5.43.1)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.28.0
+      '@babel/plugin-transform-dynamic-import': 7.27.1(@babel/core@7.28.0)
+      '@babel/plugin-transform-modules-systemjs': 7.27.1(@babel/core@7.28.0)
       '@babel/preset-env': 7.28.0(@babel/core@7.28.0)
+      babel-plugin-polyfill-corejs3: 0.13.0(@babel/core@7.28.0)
+      babel-plugin-polyfill-regenerator: 0.6.5(@babel/core@7.28.0)
       browserslist: 4.25.1
       browserslist-to-esbuild: 2.1.1(browserslist@4.25.1)
-      core-js: 3.44.0
+      core-js: 3.45.1
       magic-string: 0.30.17
       regenerator-runtime: 0.14.1
       systemjs: 6.15.1
@@ -5031,7 +5035,7 @@ snapshots:
     dependencies:
       browserslist: 4.25.1
 
-  core-js@3.44.0: {}
+  core-js@3.45.1: {}
 
   cose-base@1.0.3:
     dependencies:
