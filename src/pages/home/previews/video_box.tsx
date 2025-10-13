@@ -143,7 +143,7 @@ export const VideoBox = (props: {
       return true
     })
     if (isLast) {
-      isLoadMore = getPagination().type != "all"
+      isLoadMore = getPagination().type !== "all"
     }
     if (isLoadMore) {
       const append = objStore.objs.length > 0
