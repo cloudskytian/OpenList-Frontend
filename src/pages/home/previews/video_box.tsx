@@ -131,19 +131,22 @@ export const VideoBox = (props: {
   const { handleFolder } = usePath()
   const [videoName, setVideoName] = createSignal("")
   const videos = createMemo(() => {
-    let isLoadMore = true
+    let isLoadMore = true,
+      isLast = false
     const videos = objStore.objs.filter((obj) => {
-      if (obj.type === ObjType.VIDEO) {
-        if (obj.name === objStore.obj.name) {
-          isLoadMore = false
-          setVideoName(obj.name)
-        }
-        return true
-      }
-      return false
+      if (obj.type !== ObjType.VIDEO) return false
+      if (obj.name === objStore.obj.name) {
+        isLoadMore = false
+        isLast = true
+        setVideoName(obj.name)
+      } else isLast = false
+      return true
     })
+    if (isLast) {
+      isLoadMore = getPagination().type != "all"
+    }
     if (isLoadMore) {
-      const append = videos.length > 0
+      const append = objStore.objs.length > 0
       handleFolder(
         pathDir(pathname()),
         getGlobalPage() + (append ? 1 : 0),
