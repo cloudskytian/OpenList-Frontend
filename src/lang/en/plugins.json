@@ -1,0 +1,16 @@
+{
+  "version": "Version",
+  "author": "Author",
+  "check_for_updates": "Check for updates",
+  "update": "Update",
+  "uninstall": "Uninstall",
+  "check_all_for_updates": "Check all for updates",
+  "install_plugin": "Install plugin",
+  "upload_plugin": "Upload to install",
+  "plugin_source": "Plugin Source",
+  "update_available": "Update available to version {{version}}!",
+  "no_update_available": "No update available.",
+  "update_success": "Plugin updated successfully.",
+  "updates_found": "{{count}} plugins have updates available.",
+  "all_up_to_date": "All plugins are up to date."
+}

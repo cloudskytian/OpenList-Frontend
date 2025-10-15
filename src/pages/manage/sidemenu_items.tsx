@@ -14,6 +14,7 @@ import {
   BsBucket,
   BsHddNetwork,
   BsArrowLeftRight,
+  BsPlugFill,
 } from "solid-icons/bs"
 import { FiLogIn } from "solid-icons/fi"
 import { SiMetabase } from "solid-icons/si"
@@ -167,6 +168,12 @@ export const side_menu_items: SideMenuItem[] = [
     icon: BsPersonCircle,
     to: "/@manage/users",
     component: lazy(() => import("./users/Users")),
+  },
+  {
+    title: "manage.sidemenu.plugins", // 新增的插件菜单
+    icon: BsPlugFill,
+    to: "/@manage/plugins",
+    component: lazy(() => import("./plugins/Plugins")),
   },
   {
     title: "manage.sidemenu.storages",

@@ -13,6 +13,7 @@ import shares from "./shares.json"
 import storages from "./storages.json"
 import tasks from "./tasks.json"
 import users from "./users.json"
+import plugins from "./plugins.json"
 
 export const dict = {
   br,
@@ -30,4 +31,5 @@ export const dict = {
   storages,
   tasks,
   users,
+  plugins,
 }
