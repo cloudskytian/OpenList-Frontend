@@ -1,21 +1,20 @@
 import EmbedPDF from "@embedpdf/snippet"
-import { Box } from "@hope-ui/solid"
+import { Box, useColorMode } from "@hope-ui/solid"
 import { onMount } from "solid-js"
 import { currentLang } from "~/app/i18n"
 import { objStore } from "~/store"
 
 const PDFViewer = () => {
+  const { colorMode } = useColorMode()
   let ref: HTMLDivElement | undefined
-  let instance: any
-
   onMount(() => {
     const src = objStore.raw_url
     if (ref && src) {
-      instance = EmbedPDF.init({
+      EmbedPDF.init({
         type: "container",
         target: ref,
         src,
-        theme: { preference: "system" },
+        theme: { preference: colorMode() },
         i18n: {
           defaultLocale: currentLang(),
           fallbackLocale: "en",
