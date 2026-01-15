@@ -1,4 +1,5 @@
 import EmbedPDF from "@embedpdf/snippet"
+import pdfiumWasmUrl from "@embedpdf/snippet/dist/pdfium.wasm?url"
 import { Box, useColorMode } from "@hope-ui/solid"
 import { onMount } from "solid-js"
 import { currentLang } from "~/app/i18n"
@@ -9,6 +10,8 @@ const PDFViewer = () => {
   let ref: HTMLDivElement | undefined
   onMount(() => {
     const src = objStore.raw_url
+    // wasm url must be absolute
+    const absolutePdfiumWasmUrl = new URL(pdfiumWasmUrl, location.href).href
     if (ref && src) {
       EmbedPDF.init({
         type: "container",
@@ -19,6 +22,7 @@ const PDFViewer = () => {
           defaultLocale: currentLang(),
           fallbackLocale: "en",
         },
+        wasmUrl: absolutePdfiumWasmUrl,
       })
     }
   })
