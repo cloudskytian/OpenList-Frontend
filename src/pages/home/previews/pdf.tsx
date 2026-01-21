@@ -4,6 +4,7 @@ import { Box, useColorMode } from "@hope-ui/solid"
 import { onMount } from "solid-js"
 import { currentLang } from "~/app/i18n"
 import { objStore } from "~/store"
+import { base_path } from "~/utils"
 
 const PDFViewer = () => {
   const { colorMode } = useColorMode()
@@ -11,7 +12,10 @@ const PDFViewer = () => {
   onMount(() => {
     const src = objStore.raw_url
     // wasm url must be absolute
-    const absolutePdfiumWasmUrl = new URL(pdfiumWasmUrl, location.href).href
+    const absolutePdfiumWasmUrl = new URL(
+      pdfiumWasmUrl,
+      location.href + base_path,
+    ).href
     if (ref && src) {
       EmbedPDF.init({
         type: "container",
