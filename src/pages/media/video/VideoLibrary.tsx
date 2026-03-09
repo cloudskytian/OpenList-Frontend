@@ -1,0 +1,690 @@
+import {
+  createSignal,
+  createResource,
+  createMemo,
+  Show,
+  For,
+  onMount,
+  onCleanup,
+} from "solid-js"
+import { useColorMode } from "@hope-ui/solid"
+import { MediaLayout } from "../MediaLayout"
+import { MediaBrowser } from "../MediaBrowser"
+import { getMediaItem } from "~/utils/media_api"
+import { fsGet } from "~/utils/api"
+import type { MediaItem } from "~/types"
+import { getMediaName, parseAuthors } from "~/types"
+import { base_path, ext } from "~/utils"
+import Artplayer from "artplayer"
+import Hls from "hls.js"
+import mpegts from "mpegts.js"
+
+// ==================== 视频卡片 ====================
+const VideoCard = (props: { item: MediaItem }) => {
+  const { colorMode } = useColorMode()
+  const isDark = createMemo(() => colorMode() === "dark")
+  const cardBg = createMemo(() =>
+    isDark() ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+  )
+  const cardBorder = createMemo(() =>
+    isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)",
+  )
+  const coverBg = createMemo(() => (isDark() ? "#1e293b" : "#e2e8f0"))
+  const titleColor = createMemo(() => (isDark() ? "#e2e8f0" : "#1e293b"))
+  const subColor = createMemo(() => (isDark() ? "#64748b" : "#94a3b8"))
+  const name = () => getMediaName(props.item)
+  return (
+    <div
+      style={{
+        background: cardBg(),
+        "border-radius": "12px",
+        overflow: "hidden",
+        border: `1px solid ${cardBorder()}`,
+        transition: "transform 0.2s, box-shadow 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)"
+        e.currentTarget.style.boxShadow = isDark()
+          ? "0 12px 32px rgba(0,0,0,0.4)"
+          : "0 12px 32px rgba(0,0,0,0.15)"
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)"
+        e.currentTarget.style.boxShadow = "none"
+      }}
+    >
+      {/* 封面 */}
+      <div
+        style={{
+          position: "relative",
+          "padding-top": "150%",
+          background: coverBg(),
+        }}
+      >
+        <Show
+          when={props.item.cover}
+          fallback={
+            <div
+              style={{
+                position: "absolute",
+                inset: "0",
+                display: "flex",
+                "align-items": "center",
+                "justify-content": "center",
+                "font-size": "48px",
+                color: subColor(),
+              }}
+            >
+              🎬
+            </div>
+          }
+        >
+          <img
+            src={props.item.cover}
+            alt={name()}
+            style={{
+              position: "absolute",
+              inset: "0",
+              width: "100%",
+              height: "100%",
+              "object-fit": "cover",
+            }}
+            loading="lazy"
+          />
+        </Show>
+        {/* 评分角标 */}
+        <Show when={props.item.rating > 0}>
+          <div
+            style={{
+              position: "absolute",
+              top: "8px",
+              right: "8px",
+              background: "rgba(0,0,0,0.7)",
+              "border-radius": "6px",
+              padding: "2px 6px",
+              "font-size": "11px",
+              color: "#fbbf24",
+              "font-weight": "600",
+            }}
+          >
+            ⭐ {props.item.rating.toFixed(1)}
+          </div>
+        </Show>
+      </div>
+      {/* 信息 */}
+      <div style={{ padding: "10px 12px" }}>
+        <div
+          style={{
+            color: titleColor(),
+            "font-size": "13px",
+            "font-weight": "500",
+            overflow: "hidden",
+            "text-overflow": "ellipsis",
+            "white-space": "nowrap",
+            "margin-bottom": "4px",
+          }}
+          title={name()}
+        >
+          {name()}
+        </div>
+        <Show when={props.item.release_date}>
+          <div style={{ color: subColor(), "font-size": "11px" }}>
+            {props.item.release_date?.slice(0, 4)}
+          </div>
+        </Show>
+      </div>
+    </div>
+  )
+}
+
+// ==================== 内嵌视频播放器 ====================
+const VideoPlayer = (props: { item: MediaItem; onClose: () => void }) => {
+  let playerContainer: HTMLDivElement | undefined
+  let player: Artplayer | undefined
+  let hlsPlayer: Hls | undefined
+  let flvPlayer: mpegts.Player | undefined
+
+  const [rawUrl, setRawUrl] = createSignal("")
+  const [loading, setLoading] = createSignal(true)
+  const [error, setError] = createSignal("")
+
+  onMount(async () => {
+    // 通过 fsGet 获取文件的 raw_url
+    try {
+      const resp = await fsGet(props.item.file_path)
+      if (resp.code === 200 && resp.data?.raw_url) {
+        setRawUrl(resp.data.raw_url)
+      } else {
+        setError("获取播放地址失败：" + (resp.message || "未知错误"))
+      }
+    } catch (e: any) {
+      setError("获取播放地址失败：" + e.message)
+    } finally {
+      setLoading(false)
+    }
+  })
+
+  // 当 rawUrl 就绪后初始化 Artplayer
+  const initPlayer = (url: string) => {
+    if (!playerContainer || !url) return
+    const fileExt = ext(props.item.file_name)
+    player = new Artplayer({
+      container: playerContainer,
+      url,
+      title: getMediaName(props.item),
+      volume: 1.0,
+      autoplay: true,
+      autoSize: false,
+      loop: false,
+      flip: true,
+      playbackRate: true,
+      aspectRatio: true,
+      screenshot: true,
+      setting: true,
+      hotkey: true,
+      pip: true,
+      fullscreen: true,
+      fullscreenWeb: true,
+      mutex: true,
+      playsInline: true,
+      type: fileExt,
+      customType: {
+        m3u8: (video: HTMLMediaElement, src: string) => {
+          hlsPlayer = new Hls()
+          hlsPlayer.loadSource(src)
+          hlsPlayer.attachMedia(video)
+          if (!video.src) video.src = src
+        },
+        flv: (video: HTMLMediaElement, src: string) => {
+          flvPlayer = mpegts.createPlayer({ type: "flv", url: src })
+          flvPlayer.attachMediaElement(video)
+          flvPlayer.load()
+        },
+      },
+      moreVideoAttr: {
+        // @ts-ignore
+        "webkit-playsinline": true,
+        playsInline: true,
+        crossOrigin: "anonymous",
+      },
+    })
+  }
+
+  onCleanup(() => {
+    if (player?.video) player.video.src = ""
+    player?.destroy()
+    hlsPlayer?.destroy()
+    flvPlayer?.destroy()
+  })
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: "0",
+        "z-index": "200",
+        background: "#000",
+        display: "flex",
+        "flex-direction": "column",
+      }}
+    >
+      {/* 顶部栏 */}
+      <div
+        style={{
+          display: "flex",
+          "align-items": "center",
+          gap: "12px",
+          padding: "10px 16px",
+          background: "rgba(0,0,0,0.8)",
+          "flex-shrink": "0",
+        }}
+      >
+        <button
+          onClick={props.onClose}
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            "border-radius": "8px",
+            color: "#94a3b8",
+            padding: "6px 14px",
+            cursor: "pointer",
+            "font-size": "13px",
+          }}
+        >
+          ← 返回
+        </button>
+        <span
+          style={{
+            color: "#e2e8f0",
+            "font-size": "14px",
+            "font-weight": "500",
+          }}
+        >
+          {getMediaName(props.item)}
+        </span>
+      </div>
+
+      {/* 播放区域 */}
+      <div style={{ flex: "1", position: "relative", background: "#000" }}>
+        <Show when={loading()}>
+          <div
+            style={{
+              position: "absolute",
+              inset: "0",
+              display: "flex",
+              "align-items": "center",
+              "justify-content": "center",
+              "flex-direction": "column",
+              gap: "12px",
+              color: "#64748b",
+            }}
+          >
+            <div style={{ "font-size": "32px" }}>⏳</div>
+            <div>正在获取播放地址...</div>
+          </div>
+        </Show>
+        <Show when={error()}>
+          <div
+            style={{
+              position: "absolute",
+              inset: "0",
+              display: "flex",
+              "align-items": "center",
+              "justify-content": "center",
+              "flex-direction": "column",
+              gap: "12px",
+              color: "#f87171",
+            }}
+          >
+            <div style={{ "font-size": "32px" }}>⚠️</div>
+            <div>{error()}</div>
+          </div>
+        </Show>
+        <Show when={!loading() && !error() && rawUrl()}>
+          <div
+            ref={(el) => {
+              playerContainer = el
+              // rawUrl 已就绪，初始化播放器
+              initPlayer(rawUrl())
+            }}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </Show>
+      </div>
+    </div>
+  )
+}
+
+// ==================== 视频详情页 ====================
+const VideoDetail = (props: { id: string; onBack: () => void }) => {
+  const { colorMode } = useColorMode()
+  const isDark = createMemo(() => colorMode() === "dark")
+  const [item] = createResource(
+    () => parseInt(props.id),
+    async (id) => {
+      const resp = await getMediaItem(id)
+      if (resp.code === 200) return resp.data
+      return null
+    },
+  )
+
+  const [showPlayer, setShowPlayer] = createSignal(false)
+
+  const backBtnBg = createMemo(() =>
+    isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+  )
+  const backBtnBorder = createMemo(() =>
+    isDark() ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)",
+  )
+  const backBtnColor = createMemo(() => (isDark() ? "#94a3b8" : "#64748b"))
+  const titleColor = createMemo(() => (isDark() ? "#f1f5f9" : "#0f172a"))
+  const metaColor = createMemo(() => (isDark() ? "#64748b" : "#94a3b8"))
+  const genreBg = createMemo(() =>
+    isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+  )
+  const genreColor = createMemo(() => (isDark() ? "#94a3b8" : "#64748b"))
+  const authorColor = createMemo(() => (isDark() ? "#94a3b8" : "#475569"))
+  const authorLabelColor = createMemo(() => (isDark() ? "#64748b" : "#94a3b8"))
+  const plotTitleColor = createMemo(() => (isDark() ? "#94a3b8" : "#64748b"))
+  const plotColor = createMemo(() => (isDark() ? "#cbd5e1" : "#334155"))
+  const coverFallbackBg = createMemo(() => (isDark() ? "#1e293b" : "#e2e8f0"))
+  const coverFallbackColor = createMemo(() =>
+    isDark() ? "#334155" : "#94a3b8",
+  )
+
+  return (
+    <Show
+      when={item()}
+      fallback={
+        <div
+          style={{
+            "text-align": "center",
+            padding: "60px",
+            color: metaColor(),
+          }}
+        >
+          {item.loading ? "加载中..." : "资源不存在"}
+        </div>
+      }
+    >
+      {(data) => {
+        const authors = () => parseAuthors(data().authors)
+        const genres = () => data().genre?.split(",").filter(Boolean) ?? []
+
+        return (
+          <div>
+            {/* 返回按鈕 */}
+            <button
+              onClick={props.onBack}
+              style={{
+                background: backBtnBg(),
+                border: `1px solid ${backBtnBorder()}`,
+                "border-radius": "8px",
+                color: backBtnColor(),
+                padding: "8px 16px",
+                cursor: "pointer",
+                "font-size": "13px",
+                "margin-bottom": "24px",
+                display: "flex",
+                "align-items": "center",
+                gap: "6px",
+              }}
+            >
+              ← 返回
+            </button>
+
+            {/* 背景模糊层 */}
+            <Show when={data().cover}>
+              <div
+                style={{
+                  position: "fixed",
+                  inset: "0",
+                  "background-image": `url(${data().cover})`,
+                  "background-size": "cover",
+                  "background-position": "center",
+                  filter: "blur(40px) brightness(0.2)",
+                  "z-index": "-1",
+                  transform: "scale(1.1)",
+                }}
+              />
+            </Show>
+
+            {/* 详情内容 */}
+            <div
+              style={{
+                display: "flex",
+                gap: "32px",
+                "flex-wrap": "wrap",
+              }}
+            >
+              {/* 封面 */}
+              <div style={{ "flex-shrink": "0" }}>
+                <Show
+                  when={data().cover}
+                  fallback={
+                    <div
+                      style={{
+                        width: "220px",
+                        height: "330px",
+                        background: coverFallbackBg(),
+                        "border-radius": "12px",
+                        display: "flex",
+                        "align-items": "center",
+                        "justify-content": "center",
+                        "font-size": "64px",
+                        color: coverFallbackColor(),
+                      }}
+                    >
+                      🎬
+                    </div>
+                  }
+                >
+                  <img
+                    src={data().cover}
+                    alt={getMediaName(data())}
+                    style={{
+                      width: "220px",
+                      height: "330px",
+                      "object-fit": "cover",
+                      "border-radius": "12px",
+                      "box-shadow": "0 20px 60px rgba(0,0,0,0.5)",
+                    }}
+                  />
+                </Show>
+              </div>
+
+              {/* 信息 */}
+              <div style={{ flex: "1", "min-width": "280px" }}>
+                <h1
+                  style={{
+                    margin: "0 0 8px",
+                    "font-size": "28px",
+                    "font-weight": "700",
+                    color: titleColor(),
+                    "line-height": "1.2",
+                  }}
+                >
+                  {getMediaName(data())}
+                </h1>
+
+                {/* 元信息行 */}
+                <div
+                  style={{
+                    display: "flex",
+                    "align-items": "center",
+                    gap: "12px",
+                    "flex-wrap": "wrap",
+                    "margin-bottom": "16px",
+                  }}
+                >
+                  <Show when={data().rating > 0}>
+                    <span
+                      style={{
+                        background: "rgba(251,191,36,0.15)",
+                        border: "1px solid rgba(251,191,36,0.3)",
+                        "border-radius": "6px",
+                        padding: "3px 8px",
+                        color: "#fbbf24",
+                        "font-size": "14px",
+                        "font-weight": "600",
+                      }}
+                    >
+                      ⭐ {data().rating.toFixed(1)}
+                    </span>
+                  </Show>
+                  <Show when={data().release_date}>
+                    <span style={{ color: metaColor(), "font-size": "14px" }}>
+                      {data().release_date?.slice(0, 4)}
+                    </span>
+                  </Show>
+                  <Show when={data().video_type}>
+                    <span
+                      style={{
+                        background: "rgba(99,102,241,0.15)",
+                        border: "1px solid rgba(99,102,241,0.3)",
+                        "border-radius": "6px",
+                        padding: "3px 8px",
+                        color: "#a5b4fc",
+                        "font-size": "12px",
+                      }}
+                    >
+                      {data().video_type === "movie" ? "电影" : "电视剧"}
+                    </span>
+                  </Show>
+                </div>
+
+                {/* 类型标签 */}
+                <Show when={genres().length > 0}>
+                  <div
+                    style={{
+                      display: "flex",
+                      "flex-wrap": "wrap",
+                      gap: "6px",
+                      "margin-bottom": "16px",
+                    }}
+                  >
+                    <For each={genres()}>
+                      {(g) => (
+                        <span
+                          style={{
+                            background: genreBg(),
+                            "border-radius": "6px",
+                            padding: "3px 10px",
+                            color: genreColor(),
+                            "font-size": "12px",
+                          }}
+                        >
+                          {g}
+                        </span>
+                      )}
+                    </For>
+                  </div>
+                </Show>
+
+                {/* 演员 */}
+                <Show when={authors().length > 0}>
+                  <div style={{ "margin-bottom": "16px" }}>
+                    <span
+                      style={{ color: authorLabelColor(), "font-size": "13px" }}
+                    >
+                      主演：
+                    </span>
+                    <span style={{ color: authorColor(), "font-size": "13px" }}>
+                      {authors().slice(0, 5).join(" / ")}
+                    </span>
+                  </div>
+                </Show>
+
+                {/* 播放按钮 */}
+                <Show when={showPlayer()}>
+                  <VideoPlayer
+                    item={data()}
+                    onClose={() => setShowPlayer(false)}
+                  />
+                </Show>
+                <button
+                  onClick={() => setShowPlayer(true)}
+                  style={{
+                    background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                    border: "none",
+                    "border-radius": "10px",
+                    color: "white",
+                    padding: "12px 28px",
+                    "font-size": "15px",
+                    "font-weight": "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    "align-items": "center",
+                    gap: "8px",
+                    "box-shadow": "0 4px 16px rgba(99,102,241,0.4)",
+                    "margin-bottom": "24px",
+                  }}
+                >
+                  ▶ 立即播放
+                </button>
+
+                {/* 剧情简介 */}
+                <Show when={data().plot || data().description}>
+                  <div>
+                    <h3
+                      style={{
+                        color: plotTitleColor(),
+                        "font-size": "13px",
+                        "font-weight": "600",
+                        "text-transform": "uppercase",
+                        "letter-spacing": "0.08em",
+                        "margin-bottom": "8px",
+                      }}
+                    >
+                      剧情简介
+                    </h3>
+                    <p
+                      style={{
+                        color: plotColor(),
+                        "font-size": "14px",
+                        "line-height": "1.7",
+                        margin: "0",
+                      }}
+                    >
+                      {data().plot || data().description}
+                    </p>
+                  </div>
+                </Show>
+              </div>
+            </div>
+          </div>
+        )
+      }}
+    </Show>
+  )
+}
+
+// ==================== 视频库主页 ====================
+const VideoLibrary = () => {
+  const [selectedId, setSelectedId] = createSignal<string | null>(null)
+
+  return (
+    <MediaLayout title="🎬 影视资源库">
+      <Show
+        when={selectedId()}
+        fallback={
+          <MediaBrowser
+            mediaType="video"
+            onItemClick={(item) => setSelectedId(String(item.id))}
+            renderCard={(item) => <VideoCard item={item} />}
+            renderListRow={(item) => {
+              const { colorMode: cm } = useColorMode()
+              const dark = createMemo(() => cm() === "dark")
+              return (
+                <>
+                  <Show
+                    when={item.cover}
+                    fallback={<span style={{ "font-size": "20px" }}>🎬</span>}
+                  >
+                    <img
+                      src={item.cover}
+                      style={{
+                        width: "32px",
+                        height: "48px",
+                        "object-fit": "cover",
+                        "border-radius": "4px",
+                      }}
+                    />
+                  </Show>
+                  <div style={{ flex: "1" }}>
+                    <div
+                      style={{
+                        color: dark() ? "#e2e8f0" : "#1e293b",
+                        "font-size": "14px",
+                      }}
+                    >
+                      {getMediaName(item)}
+                    </div>
+                    <div
+                      style={{
+                        color: dark() ? "#475569" : "#94a3b8",
+                        "font-size": "12px",
+                      }}
+                    >
+                      {item.release_date?.slice(0, 4)}{" "}
+                      {item.genre?.split(",")[0]}
+                    </div>
+                  </div>
+                  <Show when={item.rating > 0}>
+                    <span style={{ color: "#fbbf24", "font-size": "13px" }}>
+                      ⭐ {item.rating.toFixed(1)}
+                    </span>
+                  </Show>
+                </>
+              )
+            }}
+          />
+        }
+      >
+        <VideoDetail id={selectedId()!} onBack={() => setSelectedId(null)} />
+      </Show>
+    </MediaLayout>
+  )
+}
+
+export default VideoLibrary

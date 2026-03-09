@@ -1,0 +1,111 @@
+// 媒体库类型定义
+
+export type MediaType = "video" | "music" | "image" | "book"
+
+export interface MediaItem {
+  id: number
+  created_at: string
+  updated_at: string
+  media_type: MediaType
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  hidden: boolean
+  // 刮削信息
+  scraped_name: string
+  description: string
+  cover: string
+  release_date: string
+  rating: number
+  genre: string
+  authors: string // JSON数组字符串
+  plot: string
+  reviews: string
+  external_id: string
+  // 音乐
+  album_name: string
+  album_artist: string
+  track_number: number
+  duration: number
+  lyrics: string
+  // 视频
+  video_type: string
+  season: number
+  episode: number
+  // 书籍
+  publisher: string
+  isbn: string
+  // 目录
+  is_folder: boolean
+  folder_path: string
+  scraped_at: string | null
+}
+
+export interface AlbumInfo {
+  album_name: string
+  album_artist: string
+  cover: string
+  release_date: string
+  track_count: number
+}
+
+export interface MediaConfig {
+  id?: number
+  media_type: MediaType
+  enabled: boolean
+  scan_path: string
+  path_merge: boolean
+  last_scan_at: string | null
+  last_scrape_at: string | null
+}
+
+export interface MediaScanProgress {
+  media_type: MediaType
+  running: boolean
+  total: number
+  done: number
+  message: string
+  error?: string
+}
+
+export interface MediaListQuery {
+  media_type?: MediaType
+  page?: number
+  page_size?: number
+  order_by?: "name" | "date" | "size"
+  order_dir?: "asc" | "desc"
+  folder_path?: string
+  keyword?: string
+}
+
+// 解析 authors JSON字符串
+export function parseAuthors(authors: string): string[] {
+  if (!authors) return []
+  try {
+    return JSON.parse(authors)
+  } catch {
+    return authors ? [authors] : []
+  }
+}
+
+// 格式化时长（秒 -> mm:ss）
+export function formatDuration(seconds: number): string {
+  if (!seconds) return "0:00"
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${s.toString().padStart(2, "0")}`
+}
+
+// 获取媒体显示名称
+export function getMediaName(item: MediaItem): string {
+  return item.scraped_name || item.file_name || ""
+}
+
+// 媒体类型标签
+export const mediaTypeLabels: Record<MediaType, string> = {
+  video: "影视",
+  music: "音乐",
+  image: "图片",
+  book: "书籍",
+}
