@@ -40,6 +40,14 @@ const hide_routes: Route[] = [
     component: lazy(() => import("./metas/AddOrEdit")),
   },
   {
+    to: "/virtual_hosts/add",
+    component: lazy(() => import("./virtual_hosts/AddOrEdit")),
+  },
+  {
+    to: "/virtual_hosts/edit/:id",
+    component: lazy(() => import("./virtual_hosts/AddOrEdit")),
+  },
+  {
     to: "/2fa",
     component: lazy(() => import("./users/2fa")),
   },
