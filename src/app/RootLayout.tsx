@@ -15,6 +15,7 @@ import { useColorMode, Icon } from "@hope-ui/solid"
 import { TbChevronLeft, TbChevronRight } from "solid-icons/tb"
 import { Nav } from "~/pages/home/Nav"
 import { Layout } from "~/pages/home/header/layout"
+import { TopBarActions } from "~/pages/home/toolbar/Right"
 import { useRouter } from "~/hooks"
 import { getSetting, objStore, State } from "~/store"
 import { BsSearch } from "solid-icons/bs"
@@ -61,49 +62,6 @@ const TopBar = () => {
         gap: "8px",
       }}
     >
-      {/* 侧边栏收起/展开按钮 */}
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed())}
-        title={sidebarCollapsed() ? "展开侧边栏" : "收起侧边栏"}
-        style={{
-          background: isDark() ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-          border: `1px solid ${isDark() ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
-          "border-radius": "7px",
-          width: "28px",
-          height: "28px",
-          cursor: "pointer",
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          color: mutedColor(),
-          transition: "all 0.18s ease",
-          "flex-shrink": "0",
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLButtonElement
-          el.style.background = isDark()
-            ? "rgba(59,130,246,0.15)"
-            : "rgba(59,130,246,0.08)"
-          el.style.color = "#3b82f6"
-          el.style.borderColor = "rgba(59,130,246,0.3)"
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLButtonElement
-          el.style.background = isDark()
-            ? "rgba(255,255,255,0.06)"
-            : "rgba(0,0,0,0.05)"
-          el.style.color = mutedColor()
-          el.style.borderColor = isDark()
-            ? "rgba(255,255,255,0.08)"
-            : "rgba(0,0,0,0.08)"
-        }}
-      >
-        <Icon
-          as={sidebarCollapsed() ? TbChevronRight : TbChevronLeft}
-          boxSize="14px"
-        />
-      </button>
-
       {/* 面包屑导航 / 页面标题 */}
       <div style={{ flex: "1", "min-width": "0", overflow: "hidden" }}>
         <Show
@@ -116,7 +74,7 @@ const TopBar = () => {
                 "font-weight": "600",
               }}
             >
-              媒体库
+              📺 媒体库
             </span>
           }
         >
@@ -124,16 +82,62 @@ const TopBar = () => {
         </Show>
       </div>
 
-      {/* 右侧工具区（仅文件浏览时显示） */}
-      <Show when={isFileBrowser()}>
-        <div
+      {/* 右侧工具区 */}
+      <div
+        style={{
+          display: "flex",
+          "align-items": "center",
+          gap: "6px",
+          "flex-shrink": "0",
+        }}
+      >
+        {/* 侧边栏收起/展开按钮 */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed())}
+          title={sidebarCollapsed() ? "展开侧边栏" : "收起侧边栏"}
           style={{
+            background: isDark()
+              ? "rgba(255,255,255,0.06)"
+              : "rgba(0,0,0,0.05)",
+            border: `1px solid ${isDark() ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+            "border-radius": "7px",
+            width: "28px",
+            height: "28px",
+            cursor: "pointer",
             display: "flex",
             "align-items": "center",
-            gap: "6px",
+            "justify-content": "center",
+            color: mutedColor(),
+            transition: "all 0.18s ease",
             "flex-shrink": "0",
           }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.background = isDark()
+              ? "rgba(59,130,246,0.15)"
+              : "rgba(59,130,246,0.08)"
+            el.style.color = "#3b82f6"
+            el.style.borderColor = "rgba(59,130,246,0.3)"
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.background = isDark()
+              ? "rgba(255,255,255,0.06)"
+              : "rgba(0,0,0,0.05)"
+            el.style.color = mutedColor()
+            el.style.borderColor = isDark()
+              ? "rgba(255,255,255,0.08)"
+              : "rgba(0,0,0,0.08)"
+          }}
         >
+          <Icon
+            as={sidebarCollapsed() ? TbChevronRight : TbChevronLeft}
+            boxSize="14px"
+          />
+        </button>
+
+        {/* 搜索按钮和布局切换（仅文件浏览时显示） */}
+        <Show when={isFileBrowser()}>
           {/* 搜索按钮 */}
           <Show when={isFolder() && getSetting("search_index") !== "none"}>
             <button
@@ -179,12 +183,15 @@ const TopBar = () => {
             </button>
           </Show>
 
+          {/* 工具操作按钮 */}
+          <TopBarActions />
+
           {/* 布局切换 */}
           <Show when={isFolder()}>
             <Layout />
           </Show>
-        </div>
-      </Show>
+        </Show>
+      </div>
     </div>
   )
 }

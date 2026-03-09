@@ -17,6 +17,7 @@ import {
   TbMenu2,
   TbLayersIntersect,
   TbSettings,
+  TbAdjustments,
 } from "solid-icons/tb"
 import { BsPlayCircleFill, BsCardImage } from "solid-icons/bs"
 import { BiSolidBookContent } from "solid-icons/bi"
@@ -85,7 +86,7 @@ export const GlobalSidebar = () => {
   })
 
   const isVisible = createMemo(() => !isMobile() || sidebarVisible())
-  const sidebarWidth = createMemo(() => (sidebarCollapsed() ? "48px" : "128px"))
+  const sidebarWidth = createMemo(() => (sidebarCollapsed() ? "48px" : "130px"))
 
   // Logo：从设置读取，支持亮/暗两套（与 Header.tsx 保持完全一致）
   const logos = getSetting("logo").split("\n")
@@ -149,6 +150,12 @@ export const GlobalSidebar = () => {
   // ─── 导航跳转 ─────────────────────────────────────────────
   const handleNav = (path: string) => {
     window.location.href = joinBase(path)
+    if (isMobile()) setSidebarVisible(false)
+  }
+
+  // ─── 系统设置跳转 ─────────────────────────────────────────
+  const handleSettings = () => {
+    window.location.href = joinBase("/@manage/settings/site")
     if (isMobile()) setSidebarVisible(false)
   }
 
@@ -409,6 +416,7 @@ export const GlobalSidebar = () => {
             padding: sidebarCollapsed() ? "8px 0" : "8px 8px",
             "border-top": `1px solid ${borderColor()}`,
             display: "flex",
+            "flex-direction": sidebarCollapsed() ? "column" : "row",
             "align-items": "center",
             "justify-content": sidebarCollapsed() ? "center" : "space-between",
             gap: "6px",
@@ -446,54 +454,83 @@ export const GlobalSidebar = () => {
             <Icon as={isDark() ? FiSun : FiMoon} boxSize="15px" />
           </button>
 
-          {/* 透明模式切换（折叠时隐藏） */}
-          <Show when={!sidebarCollapsed()}>
-            <button
-              onClick={toggleTransparent}
-              title={sidebarTransparent() ? "关闭透明模式" : "开启透明模式"}
-              style={{
-                background: sidebarTransparent()
-                  ? isDark()
-                    ? "rgba(6,182,212,0.18)"
-                    : "rgba(6,182,212,0.10)"
-                  : btnBg(),
-                border: `1px solid ${sidebarTransparent() ? "rgba(6,182,212,0.35)" : btnBorder()}`,
-                "border-radius": "7px",
-                height: "28px",
-                padding: "0 8px",
-                cursor: "pointer",
-                display: "flex",
-                "align-items": "center",
-                gap: "4px",
-                "font-size": "11px",
-                color: sidebarTransparent()
-                  ? isDark()
-                    ? "#67e8f9"
-                    : "#0891b2"
-                  : textSecondary(),
-                "font-weight": sidebarTransparent() ? "600" : "400",
-                transition: "all 0.18s ease",
-                "white-space": "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                if (!sidebarTransparent()) {
-                  const el = e.currentTarget as HTMLButtonElement
-                  el.style.background = isDark()
-                    ? "rgba(6,182,212,0.10)"
-                    : "rgba(6,182,212,0.06)"
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!sidebarTransparent()) {
-                  ;(e.currentTarget as HTMLButtonElement).style.background =
-                    btnBg()
-                }
-              }}
-            >
-              <Icon as={TbLayersIntersect} boxSize="14px" />
-              透明
-            </button>
-          </Show>
+          {/* 系统设置 */}
+          <button
+            onClick={handleSettings}
+            title="系统设置"
+            style={{
+              background: btnBg(),
+              border: `1px solid ${btnBorder()}`,
+              "border-radius": "7px",
+              width: "28px",
+              height: "28px",
+              cursor: "pointer",
+              display: "flex",
+              "align-items": "center",
+              "justify-content": "center",
+              color: textSecondary(),
+              transition: "all 0.18s ease",
+              "flex-shrink": "0",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.background = isDark()
+                ? "rgba(59,130,246,0.15)"
+                : "rgba(59,130,246,0.08)"
+              el.style.color = "#3b82f6"
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.background = btnBg()
+              el.style.color = textSecondary()
+            }}
+          >
+            <Icon as={TbAdjustments} boxSize="15px" />
+          </button>
+
+          {/* 透明模式切换 */}
+          <button
+            onClick={toggleTransparent}
+            title={sidebarTransparent() ? "关闭透明模式" : "开启透明模式"}
+            style={{
+              background: sidebarTransparent()
+                ? isDark()
+                  ? "rgba(6,182,212,0.18)"
+                  : "rgba(6,182,212,0.10)"
+                : btnBg(),
+              border: `1px solid ${sidebarTransparent() ? "rgba(6,182,212,0.35)" : btnBorder()}`,
+              "border-radius": "7px",
+              width: "28px",
+              height: "28px",
+              cursor: "pointer",
+              display: "flex",
+              "align-items": "center",
+              "justify-content": "center",
+              color: sidebarTransparent()
+                ? isDark()
+                  ? "#67e8f9"
+                  : "#0891b2"
+                : textSecondary(),
+              transition: "all 0.18s ease",
+              "flex-shrink": "0",
+            }}
+            onMouseEnter={(e) => {
+              if (!sidebarTransparent()) {
+                const el = e.currentTarget as HTMLButtonElement
+                el.style.background = isDark()
+                  ? "rgba(6,182,212,0.10)"
+                  : "rgba(6,182,212,0.06)"
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!sidebarTransparent()) {
+                ;(e.currentTarget as HTMLButtonElement).style.background =
+                  btnBg()
+              }
+            }}
+          >
+            <Icon as={TbLayersIntersect} boxSize="15px" />
+          </button>
         </div>
       </div>
 
